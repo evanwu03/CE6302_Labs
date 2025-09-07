@@ -1,78 +1,126 @@
-/* --COPYRIGHT--,BSD
- * Copyright (c) 2015, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * --/COPYRIGHT--*/
-//***************************************************************************************
-//  Blink the LED Demo - Software Toggle P1.0
-//
-//  Description; Toggle P1.0 inside of a software loop.
-//  ACLK = n/a, MCLK = SMCLK = default DCO
-//
-//                MSP432P4xx
-//             -----------------
-//         /|\|              XIN|-
-//          | |                 |
-//          --|RST          XOUT|-
-//            |                 |
-//            |             P1.0|-->LED
-//
-//  E. Chen
-//  Texas Instruments, Inc
-//  March 2015
-//  Built with Code Composer Studio v6
-//***************************************************************************************
+// This application reads the xyz data from the 3-axis KXTC9-2050 accelerometer
+// located on boostxl_edumkii and prints them to the LCD screen. Additionally 
+// the xyz values will be communicated over UART to a MATLAB script for visualization
+
 
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 
+
+#define ENABLE_ADC_REPEATMODE 1
+
+static const uint8_t ACCEL_X_PIN = GPIO_PIN1;  // accelerometer X axis pin 
+static const uint8_t ACCEL_Y_PIN = GPIO_PIN4;  // accelerometer Y axis pin
+static const uint8_t ACCEL_Z_PIN = GPIO_PIN2;  // accelerometer Z axis pin 
+
+// ADC results buffer for accelerometer
+static uint16_t resultsBuffer[3];
+
+
+// Periperhal Initialization Functions
+void initializePeripherals(); 
+void adc_init();
+void gpio_init();
+void system_clock_init();
+
+// ADC Interrupt Handler
+void ADC14_IRQHandler(void);
+
 int main(void)
 {
-    volatile uint32_t i;
-
     // Stop watchdog timer
     WDT_A_hold(WDT_A_BASE);
+    // Disable all interrupts
+    Interrupt_disableMaster();
 
-    // Set P1.0 to output direction
-    GPIO_setAsOutputPin(
-        GPIO_PORT_P1,
-        GPIO_PIN0
-        );
+    initializePeripherals();
+
+    // Enable interrupts after initializing
+    Interrupt_enableInterrupt(INT_ADC14);
+    Interrupt_enableMaster();
 
     while(1)
     {
-        // Toggle P1.0 output
-        GPIO_toggleOutputOnPin(
-            GPIO_PORT_P1,
-			GPIO_PIN0
-			);
-
-        // Delay
-        for(i=100000; i>0; i--);
+        PCM_gotoLPM0();
     }
+}
+
+
+
+
+/// @brief Initializes all peripherals used for application
+void initializePeripherals() {
+
+// Configure pins for ADC input
+gpio_init();
+
+
+// Configure System clock 
+system_clock_init();
+
+// Enable ADC module 
+adc_init();
+
+}
+
+void system_clock_init() {
+
+    CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_48);
+    CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    CS_initClockSignal(CS_HSMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    CS_initClockSignal(CS_ACLK, CS_REFOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+
+}
+
+void adc_init() { 
+
+    // Peripheral clock gating for ADC
+    //ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_1, ADC_DIVIDER_1, ADC_MAPINTCH0); 
+    ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_64, ADC_DIVIDER_8, ADC_NOROUTE);
+
+    // Configure for multi-sequence mode since we are 
+    // Sampling from 3 ADC inputs of accelerometer at once
+    ADC14_configureMultiSequenceMode(ADC_MEM0, ADC_MEM2, ENABLE_ADC_REPEATMODE);
+
+
+    // Configure memory location for samples to be stored 
+    ADC14_configureConversionMemory(ADC_MEM0, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A14, ADC_NONDIFFERENTIAL_INPUTS);
+    ADC14_configureConversionMemory(ADC_MEM1, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A13, ADC_NONDIFFERENTIAL_INPUTS);
+    ADC14_configureConversionMemory(ADC_MEM2, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A11, ADC_NONDIFFERENTIAL_INPUTS);
+
+
+    // Enable ADC module
+    ADC14_enableModule();
+
+
+    // Enable interrupt on ADC channel 2 (end of sequence)
+    ADC14_enableInterrupt(ADC_INT2);
+
+
+    // enables sample timer used to take samples
+    ADC14_enableSampleTimer(ADC_AUTOMATIC_ITERATION);
+    
+    // Both ADC14_eanbleConversion and ADC14_toggleConversionTrigger
+    // must be called to begin sampling
+    ADC14_enableConversion();
+    ADC14_toggleConversionTrigger();
+
+}
+
+void gpio_init() { 
+    // Set GPIO pins as ADC input
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, ACCEL_Y_PIN | ACCEL_Z_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, ACCEL_X_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
+}
+
+/// @brief Triggered awhenever conversion is completed and result is placed in 
+/// ADC memory (to be defined). The results array is then grabbed and placed in a results buffer
+/// @param  
+void ADC14_IRQHandler(void) {
+
+
+    // Check ADC interrupt sequence status 
+
+
+    // Once ADC conversions are completed, store in buffer
 }
