@@ -75,7 +75,6 @@ void system_clock_init() {
 void adc_init() { 
 
     // Peripheral clock gating for ADC
-    //ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_1, ADC_DIVIDER_1, ADC_MAPINTCH0); 
     ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_64, ADC_DIVIDER_8, ADC_NOROUTE);
 
     // Configure for multi-sequence mode since we are 
