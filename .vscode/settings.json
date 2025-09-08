@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "driverlib.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}

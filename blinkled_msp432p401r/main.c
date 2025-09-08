@@ -17,6 +17,7 @@ static uint16_t resultsBuffer[3];
 void initializePeripherals();
 void adc_init();
 void gpio_init();
+void uart_init();
 void system_clock_init();
 
 // ADC Interrupt Handler
@@ -55,6 +56,9 @@ void initializePeripherals()
     adc_init();
 }
 
+
+
+/// @brief Handles System Clock Configurations
 void system_clock_init()
 {
 
@@ -65,6 +69,8 @@ void system_clock_init()
     CS_initClockSignal(CS_ACLK, CS_REFOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 }
 
+
+/// @brief Initializes ADC14 Module and sets multi-sequencing mode
 void adc_init()
 {
 
@@ -95,12 +101,25 @@ void adc_init()
     ADC14_toggleConversionTrigger();
 }
 
+
+
+
+/// @brief Initializes all GPIO Pins used in application
 void gpio_init()
 {
     // Set GPIO pins as ADC input
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, ACCEL_Y_PIN | ACCEL_Z_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, ACCEL_X_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
 }
+
+
+/// @brief Initializes UART peripheral
+void uart_init() 
+{ 
+
+
+}
+
 
 /// @brief Triggered awhenever conversion is completed and result is placed in
 /// ADC memory (to be defined). The results array is then grabbed and placed in a results buffer
