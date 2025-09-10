@@ -37,8 +37,13 @@ int main(void)
     Interrupt_enableMaster();
 
     while (1)
-    {
-        PCM_gotoLPM0();
+    {   
+       // if (data_is_ready) { 
+       // 
+       // XYZ Data 
+       // transmitData(XYZ);  
+       // }
+        PCM_gotoLPM0(); // Go back to sleep
     }
 }
 
@@ -129,5 +134,10 @@ void ADC14_IRQHandler(void)
 
     // Check ADC interrupt sequence status
 
+
     // Once ADC conversions are completed, store in buffer
+
+
+    // Set data_read flag, letting UART transfer initiate in main 
+
 }
