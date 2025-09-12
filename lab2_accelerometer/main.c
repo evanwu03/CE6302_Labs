@@ -29,8 +29,13 @@ void gpio_init();
 void uart_init();
 void system_clock_init();
 
+
 // ADC Interrupt Handler
 void ADC14_IRQHandler(void);
+
+
+void transmit_data(const uint16_t *accelData);
+
 
 int main(void)
 {
@@ -51,10 +56,18 @@ int main(void)
         {
 
             // XYZ Data
-            transmitData(XYZ);
+            transmitData(&resultsBuffer);
+            
+            
 
             // Print LCD screen
+
+
+
+            data_is_ready = false; // reset flag
         }
+
+
         PCM_gotoLPM0(); // Go back to sleep
     }
 }
@@ -163,7 +176,6 @@ void ADC14_IRQHandler(void)
     // Check ADC interrupt sequence status
     if (status & ADC_INT2)
     {
-
         // Once ADC conversions are completed, store in buffer
         // Make sure size of buffer matches the number of sequences
         ADC14_getMultiSequenceResult(&resultsBuffer);
@@ -173,8 +185,22 @@ void ADC14_IRQHandler(void)
     data_is_ready = true;
 }
 
-void transmit_data(const int* accelData) { 
+/// @brief Transmits XYZ data over UART 
+/// @param accelData 
+void transmit_data(const uint16_t *accelData)
+{
+    for (int i = 0; i < 3; i++)  // loop over X, Y, Z
+    {
+        uint16_t value = accelData[i];
 
-    
+        // Send LSB
+        while (!UART_getInterruptStatus(EUSCI_A2_BASE,
+                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
+        UART_transmitData(EUSCI_A2_BASE, value & 0xFF);
 
+        // Send MSB
+        while (!UART_getInterruptStatus(EUSCI_A2_BASE,
+                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
+        UART_transmitData(EUSCI_A2_BASE, (value >> 8) & 0xFF);
+    }
 }
