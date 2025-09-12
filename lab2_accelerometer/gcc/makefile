@@ -7,7 +7,7 @@ LNK = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 
 OBJECTS = main.obj system_msp432p401r.obj gcc_startup_msp432p401r_gcc.obj
 
-NAME = blinkled_msp432p401r
+NAME = lab2_accelerometer
 
 CFLAGS = -I.. \
     "-I$(SIMPLELINK_MSP432_SDK_INSTALL_DIR)/source" \
