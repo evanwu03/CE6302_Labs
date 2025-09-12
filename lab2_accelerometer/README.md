@@ -12,16 +12,25 @@ This lab demonstrates to read xyz acceleration values from the accelerometer emb
 ## How To Run 
 
 
-1. `make all` to compile the project using makefile
+1. To compile the project using make: 
+```
+$ cd gcc 
+$ make all
+``` 
 
-2.  Open an openocd session and run the following command ` openocd -f board/ti_msp432_launchpad.cfg `
+2.  Open an openocd session and run the following command 
+
+``` 
+$ openocd -f board/ti_msp432_launchpad.cfg 
+```
+
 
 3. Open an arm gdb session and connect to openocd server and load application
- ``` 
-   $ arm-multiarch
-   $ (gdb) target remote :3333
-   $ (gdb) load lab2_accelerometer.out 
-   ```
+``` 
+$ gdb-multiarch
+$ (gdb) target remote :3333
+$ (gdb) load lab2_accelerometer.out 
+```
 
 4. That's all! you can type `continue` or press physical reset button to see LCD screen display accelerometer data on the LCD screen.
 

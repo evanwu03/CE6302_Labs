@@ -139,5 +139,5 @@ void ADC14_IRQHandler(void)
 
 
     // Set data_read flag, letting UART transfer initiate in main 
-
+    return;
 }

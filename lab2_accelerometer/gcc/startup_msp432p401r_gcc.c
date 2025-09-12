@@ -170,6 +170,7 @@ void (* const interruptVectors[])(void) __attribute__ ((section (".intvecs"))) =
     PORT4_IRQHandler,                      /* Port4 Interrupt           */
     PORT5_IRQHandler,                      /* Port5 Interrupt           */
     PORT6_IRQHandler                       /* Port6 Interrupt           */
+    
 };
 
 /* Forward declaration of the default fault handlers. */
