@@ -34,7 +34,7 @@ void system_clock_init();
 void ADC14_IRQHandler(void);
 
 
-void transmit_data(const uint16_t *accelData);
+void transmitData(const uint16_t *accelData);
 
 
 int main(void)
@@ -84,6 +84,9 @@ void initializePeripherals()
 
     // Enable ADC module
     adc_init();
+
+    // Enable UART module 
+    uart_init();
 }
 
 /// @brief Handles System Clock Configurations
@@ -143,7 +146,7 @@ void uart_init()
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
     // Local UART configuration (9600 baud, 8N1, SMCLK @ 48 MHz)
-    const eUSCI_UART_Config uartConfig =
+    const eUSCI_UART_ConfigV1 uartConfig =
         {
             EUSCI_A_UART_CLOCKSOURCE_SMCLK,               // Clock source = SMCLK (48 MHz)
             312,                                          // BRDIV = 312
@@ -187,15 +190,15 @@ void ADC14_IRQHandler(void)
 
 /// @brief Transmits XYZ data over UART 
 /// @param accelData 
-void transmit_data(const uint16_t *accelData)
+void transmitData(const uint16_t *accelData)
 {
     for (int i = 0; i < 3; i++)  // loop over X, Y, Z
     {
         uint16_t value = accelData[i];
 
-        // Send LSB
+        // Send LSB 
         while (!UART_getInterruptStatus(EUSCI_A2_BASE,
-                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
+                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)); // Might need to read Busy flag instead
         UART_transmitData(EUSCI_A2_BASE, value & 0xFF);
 
         // Send MSB
