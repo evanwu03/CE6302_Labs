@@ -78,9 +78,9 @@ int main(void)
         
         if (data_is_ready)
         {
-            int xdata = resultsBuffer[0];
-            int ydata = resultsBuffer[1];
-            int zdata = resultsBuffer[2];
+            uint16_t xdata = resultsBuffer[0];
+            uint16_t ydata = resultsBuffer[1];
+            uint16_t zdata = resultsBuffer[2];
 
             // Print XYZ Data
             //printf(EUSCI_A0_BASE, "X: %u\n", resultsBuffer[0]);
