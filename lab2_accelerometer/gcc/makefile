@@ -5,7 +5,7 @@ include $(SIMPLELINK_MSP432_SDK_INSTALL_DIR)/imports.mak
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LNK = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 
-OBJECTS = main.obj system_msp432p401r.obj gcc_startup_msp432p401r_gcc.obj
+OBJECTS = main.obj system_msp432p401r.obj gcc_startup_msp432p401r_gcc.obj printf.obj
 
 NAME = lab2_accelerometer
 
@@ -53,6 +53,10 @@ LFLAGS = -Wl,-T,../gcc/msp432p401r.lds \
 all: $(NAME).out
 
 main.obj: ../main.c
+	@ echo Building $@
+	@ $(CC) $(CFLAGS) $< -c -o $@
+
+printf.obj: ../printf.c
 	@ echo Building $@
 	@ $(CC) $(CFLAGS) $< -c -o $@
 

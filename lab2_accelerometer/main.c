@@ -3,24 +3,45 @@
 // the xyz values will be communicated over UART to a MATLAB script for visualization
 
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
+#include "printf.h"
 
 #define ENABLE_ADC_REPEATMODE 1
 
-
-// Pin definition 
+// Pin definition
 static const uint8_t ACCEL_X_PIN = GPIO_PIN1; // accelerometer X axis pin
 static const uint8_t ACCEL_Y_PIN = GPIO_PIN4; // accelerometer Y axis pin
 static const uint8_t ACCEL_Z_PIN = GPIO_PIN2; // accelerometer Z axis pin
 
+static const uint8_t RX_PIN = GPIO_PIN2;
+static const uint8_t TX_PIN = GPIO_PIN3;
 
-static const uint8_t RX_PIN = GPIO_PIN2; 
-static const uint8_t TX_PIN = GPIO_PIN3; 
+
+//![Simple UART Config]
+/* UART Configuration Parameter. These are the configuration parameters to
+ * make the eUSCI A UART module to operate with a 9600 baud rate. These
+ * values were calculated using the online calculator that TI provides
+ * at:
+ *http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSP430BaudRateConverter/index.html
+ */
+const eUSCI_UART_ConfigV1 uartConfig =
+{
+        EUSCI_A_UART_CLOCKSOURCE_SMCLK,          // SMCLK Clock Source
+        78,                                     // BRDIV = 78
+        2,                                       // UCxBRF = 2
+        0,                                       // UCxBRS = 0
+        EUSCI_A_UART_NO_PARITY,                  // No Parity
+        EUSCI_A_UART_LSB_FIRST,                  // LSB First
+        EUSCI_A_UART_ONE_STOP_BIT,               // One stop bit
+        EUSCI_A_UART_MODE,                       // UART mode
+        EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION,  // Oversampling
+        EUSCI_A_UART_8_BIT_LEN                  // 8 bit data length
+};
 
 // ADC results buffer for accelerometer
 static uint16_t resultsBuffer[3];
 
 // Global status flag
-static uint8_t data_is_ready; // Check if data from ADC has been received and is ready to send
+static volatile uint8_t data_is_ready; // Check if data from ADC has been received and is ready to send
 
 // Periperhal Initialization Functions
 void initializePeripherals();
@@ -29,12 +50,8 @@ void gpio_init();
 void uart_init();
 void system_clock_init();
 
-
 // ADC Interrupt Handler
 void ADC14_IRQHandler(void);
-
-
-void transmitData(const uint16_t *accelData);
 
 
 int main(void)
@@ -48,44 +65,51 @@ int main(void)
 
     // Enable interrupts after initializing
     Interrupt_enableInterrupt(INT_ADC14);
+    //Interrupt_enableInterrupt(INT_EUSCIA0);
     Interrupt_enableMaster();
 
     while (1)
     {
+
+
+        //UART_transmitData(EUSCI_A0_BASE, 'f'); // Send f as a test
+        // For some reason the ADC interferes with my UART polling
+        
+        
         if (data_is_ready)
         {
 
-            // XYZ Data
-            transmitData(&resultsBuffer);
+            // Print XYZ Data
+            printf(EUSCI_A0_BASE, "X: %u\n", resultsBuffer[0]);
+            printf(EUSCI_A0_BASE, "Y: %u\n", resultsBuffer[1]);
+            printf(EUSCI_A0_BASE, "Z: %u\n", resultsBuffer[2]);
+
             
+
             
 
             // Print LCD screen
 
-
-
             data_is_ready = false; // reset flag
         }
-
-
-        PCM_gotoLPM0(); // Go back to sleep
+        
+        PCM_gotoLPM0InterruptSafe(); // Go back to sleep
     }
 }
 
 /// @brief Initializes all peripherals used for application
 void initializePeripherals()
 {
+    // Configure System clock
+    system_clock_init();
 
     // Configure pins for ADC input
     gpio_init();
 
-    // Configure System clock
-    system_clock_init();
-
     // Enable ADC module
     adc_init();
 
-    // Enable UART module 
+    // Enable UART module
     uart_init();
 }
 
@@ -93,7 +117,7 @@ void initializePeripherals()
 void system_clock_init()
 {
 
-    CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_48);
+    CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
     CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
     CS_initClockSignal(CS_HSMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
     CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
@@ -101,8 +125,9 @@ void system_clock_init()
 }
 
 /// @brief Initializes ADC14 Module and sets multi-sequencing mode
-void adc_init()
-{
+void adc_init() {
+
+
 
     // Peripheral clock gating for ADC // check this sampling rate
     ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_64, ADC_DIVIDER_8, ADC_NOROUTE);
@@ -137,33 +162,28 @@ void gpio_init()
     // Set GPIO pins as ADC input
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, ACCEL_Y_PIN | ACCEL_Z_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, ACCEL_X_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
+    
+    // Configure P3.2 (TX) and P3.3 (RX) as UART pins
+    //GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+    // Configure P1.2 (RX) and P1.3 (TX)
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+            RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+    
 }
 
 /// @brief Initializes UART peripheral
 void uart_init()
 {
-    // Configure P3.2 (TX) and P3.3 (RX) as UART pins
-    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
-    // Local UART configuration (9600 baud, 8N1, SMCLK @ 48 MHz)
-    const eUSCI_UART_ConfigV1 uartConfig =
-        {
-            EUSCI_A_UART_CLOCKSOURCE_SMCLK,               // Clock source = SMCLK (48 MHz)
-            312,                                          // BRDIV = 312
-            8,                                            // UCxBRF = 8
-            0,                                            // UCxBRS = 0
-            EUSCI_A_UART_NO_PARITY,                       // No Parity
-            EUSCI_A_UART_LSB_FIRST,                       // LSB First
-            EUSCI_A_UART_ONE_STOP_BIT,                    // One stop bit
-            EUSCI_A_UART_MODE,                            // UART mode
-            EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION // Oversampling
-        };
 
-    // Initialize UART module A2 with local config
-    UART_initModule(EUSCI_A2_BASE, &uartConfig);
+    // Initialize UART module A0 with local config
+    UART_initModule(EUSCI_A0_BASE, &uartConfig);
 
     // Enable UART module
-    UART_enableModule(EUSCI_A2_BASE);
+    UART_enableModule(EUSCI_A0_BASE);
+
+    //UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT);
+
 }
 
 /// @brief Triggered awhenever conversion is completed and result is placed in
@@ -174,36 +194,16 @@ void ADC14_IRQHandler(void)
     uint64_t status = ADC14_getEnabledInterruptStatus();
 
     // Clear the interrupt flag
-    ADC14_clearInterruptFlag(ADC_INT2);
+    ADC14_clearInterruptFlag(status);
 
     // Check ADC interrupt sequence status
     if (status & ADC_INT2)
     {
         // Once ADC conversions are completed, store in buffer
         // Make sure size of buffer matches the number of sequences
-        ADC14_getMultiSequenceResult(&resultsBuffer);
+        ADC14_getMultiSequenceResult(resultsBuffer);
     }
 
     // Set data_read flag, letting UART transfer initiate in main
     data_is_ready = true;
-}
-
-/// @brief Transmits XYZ data over UART 
-/// @param accelData 
-void transmitData(const uint16_t *accelData)
-{
-    for (int i = 0; i < 3; i++)  // loop over X, Y, Z
-    {
-        uint16_t value = accelData[i];
-
-        // Send LSB 
-        while (!UART_getInterruptStatus(EUSCI_A2_BASE,
-                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)); // Might need to read Busy flag instead
-        UART_transmitData(EUSCI_A2_BASE, value & 0xFF);
-
-        // Send MSB
-        while (!UART_getInterruptStatus(EUSCI_A2_BASE,
-                 EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
-        UART_transmitData(EUSCI_A2_BASE, (value >> 8) & 0xFF);
-    }
 }
