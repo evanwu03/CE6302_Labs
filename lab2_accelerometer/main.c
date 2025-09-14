@@ -78,17 +78,19 @@ int main(void)
         
         if (data_is_ready)
         {
+            int xdata = resultsBuffer[0];
+            int ydata = resultsBuffer[1];
+            int zdata = resultsBuffer[2];
 
             // Print XYZ Data
-            printf(EUSCI_A0_BASE, "X: %u\n", resultsBuffer[0]);
-            printf(EUSCI_A0_BASE, "Y: %u\n", resultsBuffer[1]);
-            printf(EUSCI_A0_BASE, "Z: %u\n", resultsBuffer[2]);
+            //printf(EUSCI_A0_BASE, "X: %u\n", resultsBuffer[0]);
+            //printf(EUSCI_A0_BASE, "Y: %u\n", resultsBuffer[1]);
+            //printf(EUSCI_A0_BASE, "Z: %u\n", resultsBuffer[2]);
 
+            printf(EUSCI_A0_BASE, "%u, %u, %u\n", xdata, ydata, zdata);
             
-
             
-
-            // Print LCD screen
+            // To do: Print LCD screen
 
             data_is_ready = false; // reset flag
         }
