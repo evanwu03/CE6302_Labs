@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "driverlib.h": "c",
+        "msp432.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
