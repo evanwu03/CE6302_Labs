@@ -9,10 +9,9 @@ Purpose: Control a Servo motor using a predefined square and sine wave of PWM va
 // ADC Configurations
 #define ENABLE_ADC_REPEATMODE 1
 
-// Accelerometer pin definition
-//static const uint8_t ACCEL_X_PIN = GPIO_PIN1; // accelerometer X axis pin
-//static const uint8_t ACCEL_Y_PIN = GPIO_PIN4; // accelerometer Y axis pin
-//static const uint8_t ACCEL_Z_PIN = GPIO_PIN2; // accelerometer Z axis pin
+
+// Hall Effect Sensor Sampling pin 
+static const uint8_t HALL_PIN = GPIO_PIN1; // P6.1 (ADC)
 
 
 // UART pin definition 
@@ -21,7 +20,7 @@ static const uint8_t TX_PIN = GPIO_PIN3; //  P1.3 (TX)
 
 
 // Stepper Motor Pin definitions
-static const uint8_t SERVO_PIN = GPIO_PIN5; // P2.5
+static const uint8_t PWM_PIN = GPIO_PIN5; // P2.5
 
 
 
@@ -45,22 +44,82 @@ const eUSCI_UART_ConfigV1 uartConfig =
         EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION,  // Oversampling
         EUSCI_A_UART_8_BIT_LEN                  // 8 bit data length
 };
- 
+
+
+
+
+/*
+The PWM timer that drives the BlueRobotics T200 is configured to 400Hz according 
+to maximum update rate given by the manufacturer's spec sheet. The T200 only accepts pulse width 
+periods between 1100-1900us. 
+*/
+
+static const uint16_t pwm_period_400Hz_us = 2500; 
+static const uint16_t pwm_period_400Hz_CCR = 29999;
+
 Timer_A_PWMConfig pwmConfig =
 {
         TIMER_A_CLOCKSOURCE_SMCLK,
         TIMER_A_CLOCKSOURCE_DIVIDER_1,
-        32000,
+        pwm_period_400Hz_CCR,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        3200
+        18000
+        
 };
 
-// ADC results buffer for accelerometer
-static uint16_t resultsBuffer[3];
+
+// The timer is configured to interrupt at 12.8kHz to update the duty cycle in
+// sin_table at time steps of 78.125uS. 
+// CCR0 = SMCLK frequency / target frequency -1
+// CCR0 = 12Mhz / 12.8kHz - 1 = 937
+
+static cosnt uint16_t updatePeriod = 937;  
+static const Timer_A_UpModeConfig updateTableConfig = 
+{
+    TIMER_A_CLOCKSOURCE_SMCLK,
+    TIMER_A_CLOCKSOURCE_DIVIDER_1,
+    updatePeriod, 
+    TIMER_A_TAIE_INTERRUPT_ENABLE,
+    TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE
+    TIMER_A_DO_CLEAR
+};
+
+
+// Raw current value from ADC (14bits: 0-16383)
+static uint16_t rawCurrent;
 
 // Global status flag
 static volatile uint8_t data_is_ready; // Check if data from ADC has been received and is ready to send
+
+
+
+// Index to table, Note: can we make this not a global variable?
+int tbl_index = 0;
+
+
+#define TABLE_SIZE 128
+// 100 Hz sine lookup table of PWM periods
+uint16_t sin_table[TABLE_SIZE] = {
+1750, 1757, 1764, 1771, 1778, 1785, 1792, 1799,
+1806, 1813, 1820, 1827, 1834, 1841, 1848, 1855,
+1862, 1869, 1875, 1881, 1887, 1892, 1897, 1902,
+1906, 1910, 1914, 1917, 1920, 1923, 1925, 1926,
+1927, 1927, 1927, 1926, 1925, 1923, 1920, 1917,
+1914, 1910, 1906, 1902, 1897, 1892, 1887, 1881,
+1875, 1869, 1862, 1855, 1848, 1841, 1834, 1827,
+1820, 1813, 1806, 1799, 1792, 1785, 1778, 1771,
+1764, 1757, 1750, 1743, 1736, 1729, 1722, 1715,
+1708, 1701, 1694, 1687, 1680, 1673, 1666, 1659,
+1652, 1645, 1638, 1631, 1624, 1617, 1610, 1603,
+1597, 1591, 1585, 1580, 1575, 1570, 1566, 1562,
+1558, 1555, 1552, 1550, 1548, 1547, 1546, 1546,
+1546, 1547, 1548, 1550, 1552, 1555, 1558, 1562,
+1566, 1570, 1575, 1580, 1585, 1591, 1597, 1603,
+1610, 1617, 1624, 1631, 1638, 1645, 1652, 1659
+};
+
+
 
 // Periperhal Initialization Functions
 void initializePeripherals();
@@ -91,26 +150,10 @@ int main(void)
     while (1)
     {
 
-
-        //UART_transmitData(EUSCI_A0_BASE, 'f'); // Send f as a test
-        // For some reason the ADC interferes with my UART polling
-        
         
         if (data_is_ready)
         {
-            int xdata = resultsBuffer[0];
-            int ydata = resultsBuffer[1];
-            int zdata = resultsBuffer[2];
 
-            // Print XYZ Data
-            //printf(EUSCI_A0_BASE, "X: %u\n", resultsBuffer[0]);
-            //printf(EUSCI_A0_BASE, "Y: %u\n", resultsBuffer[1]);
-            //printf(EUSCI_A0_BASE, "Z: %u\n", resultsBuffer[2]);
-
-            printf(EUSCI_A0_BASE, "%u, %u, %u\n", xdata, ydata, zdata);
-            
-            
-            // To do: Print LCD screen
 
             data_is_ready = false; // reset flag
         }
@@ -129,9 +172,8 @@ void initializePeripherals()
     gpio_init();
 
 
-
     // Enable ADC module
-    //adc_init();
+    adc_init();
 
     // Enable Timer A 
     timer_init();
@@ -159,36 +201,31 @@ void adc_init() {
     // Peripheral clock gating for ADC // check this sampling rate
     ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_64, ADC_DIVIDER_8, ADC_NOROUTE);
 
-    // Configure for multi-sequence mode since we are
-    // Sampling from 3 ADC inputs of accelerometer at once
-    ADC14_configureMultiSequenceMode(ADC_MEM0, ADC_MEM2, ENABLE_ADC_REPEATMODE);
-
-    // Configure memory location for samples to be stored
-    ADC14_configureConversionMemory(ADC_MEM0, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A14, ADC_NONDIFFERENTIAL_INPUTS);
-    ADC14_configureConversionMemory(ADC_MEM1, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A13, ADC_NONDIFFERENTIAL_INPUTS);
-    ADC14_configureConversionMemory(ADC_MEM2, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A11, ADC_NONDIFFERENTIAL_INPUTS);
-
+    ADC14_configureSingleSampleMode(ADC_MEM0, ENABLE_ADC_REPEATMODE);
     // Enable ADC module
     ADC14_enableModule();
 
     // Enable interrupt on ADC channel 2 (end of sequence)
-    ADC14_enableInterrupt(ADC_INT2);
+    ADC14_enableInterrupt(ADC_INT0);
 
     // enables sample timer used to take samples
     ADC14_enableSampleTimer(ADC_AUTOMATIC_ITERATION);
 
-    // Both ADC14_eanbleConversion and ADC14_toggleConversionTrigger
+
+    // Both ADC14_enableConversion and ADC14_toggleConversionTrigger
     // must be called to begin sampling
     ADC14_enableConversion();
-    ADC14_toggleConversionTrigger();
+    
+    // Sets source of the ADC trigger. In this code, Timer A CCR1 will be used
+    // which is set to interrupt every 1ms (1khz) on timer's rising edge.
+    ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE1, false); 
 }
 
 /// @brief Initializes all GPIO Pins used in application
 void gpio_init()
 {
     // Set GPIO pins as ADC input
-    //GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, ACCEL_Y_PIN | ACCEL_Z_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
-    //GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, ACCEL_X_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, HALL_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
     
     // Configure P3.2 (TX) and P3.3 (RX) as UART pins
     //GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
@@ -203,10 +240,13 @@ void gpio_init()
 
 
 
-/// @brief Initializes Timer A for PWM output to servo
+/// @brief Schedules Timer A to update current entry in the PWM table
 void timer_init() { 
 
-    Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
+
+    // This starts the timer that will update the duty cycle 
+    Timer_A_configureUpMode(TIMER_A0_BASE, &updateTableConfig);
+    Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
 
 }
 
@@ -237,13 +277,33 @@ void ADC14_IRQHandler(void)
     ADC14_clearInterruptFlag(status);
 
     // Check ADC interrupt sequence status
-    if (status & ADC_INT2)
+    if (status & ADC_INT0)
     {
         // Once ADC conversions are completed, store in buffer
         // Make sure size of buffer matches the number of sequences
-        ADC14_getMultiSequenceResult(resultsBuffer);
+        rawCurrent = ADC14_getResult(ADC_MEM0);
     }
 
     // Set data_read flag, letting UART transfer initiate in main
     data_is_ready = true;
 }
+
+
+void TA0_0_IRQHandler(void)
+{
+
+
+    // Clear the interrupt flag and reset timer count
+    Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+
+    // Write new duty cycle from lookup table
+    MAP_Timer_A_setCompareValue(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1,
+                                pwm_table[index]);
+
+    Timer_A_generatePWM(TIMER_A1, pwmConfig)
+
+    tbl_index++;
+    if (tbl_index >= TABLE_SIZE)
+        tbl_index = 0;
+}
+
