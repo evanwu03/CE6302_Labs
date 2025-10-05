@@ -28,7 +28,4 @@ static const eUSCI_UART_ConfigV1 uartConfig =
 
 
 
-
-
-
 #endif // UART_INIT_H

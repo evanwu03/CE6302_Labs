@@ -15,7 +15,7 @@ extern volatile uint16_t rawCurrent;
 /// @param
 void ADC14_IRQHandler(void);
 
-/// @brief Initializes ADC14 Module and sets multi-sequencing mode
+/// @brief Initializes ADC14 Module and sets to single-sampling mode
 void adc_init();
 
 

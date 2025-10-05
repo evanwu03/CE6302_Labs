@@ -6,7 +6,8 @@
         "tables.h": "c",
         "gpio_init.h": "c",
         "printf.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "timer_init.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

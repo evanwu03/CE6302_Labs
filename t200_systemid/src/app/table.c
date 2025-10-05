@@ -1,6 +1,8 @@
 
 #include "../../include/app/tables.h"
 
+
+// Validation data set that will be used for verifying T200 state space model 
 const uint16_t sin_table[TABLE_SIZE] = {
 1750, 1757, 1764, 1771, 1778, 1785, 1792, 1799,
 1806, 1813, 1820, 1827, 1834, 1841, 1848, 1855,

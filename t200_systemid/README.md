@@ -1,6 +1,6 @@
 ## Summary
 
-This lab demonstrates to read xyz acceleration values from the accelerometer embedded on the BOOSTXL-EDUMKII. This program is intended to be 
+The code is intended to perform System Identification on a Blue Robotics T200 Thruster using a Basic ESC R3
 
 ## Prerequisites 
 
@@ -29,7 +29,7 @@ $ openocd -f board/ti_msp432_launchpad.cfg
 ``` 
 $ gdb-multiarch
 $ (gdb) target remote :3333
-$ (gdb) load lab2_accelerometer.out 
+$ (gdb) load t200_systemid.out 
 ```
 
 4. That's all! you can type `continue` or press physical reset button to see LCD screen display accelerometer data on the LCD screen.
