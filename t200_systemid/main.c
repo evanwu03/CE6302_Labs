@@ -1,5 +1,5 @@
 /* 
-Purpose: Control a Servo motor using a predefined square and sine wave of PWM values 
+Purpose: Control a T200 thruster using a predefined square and sine wave of PWM values 
 */
 
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
@@ -19,9 +19,26 @@ static const uint8_t RX_PIN = GPIO_PIN2; //  P1.2 (RX)
 static const uint8_t TX_PIN = GPIO_PIN3; //  P1.3 (TX)
 
 
-// Stepper Motor Pin definitions
+// T200 ESC PWM Pin definition
 static const uint8_t PWM_PIN = GPIO_PIN5; // P2.5
 
+
+// Peripheral Initialization Functions
+void initializePeripherals();
+void adc_init();
+void gpio_init();
+void timer_init();
+void uart_init();
+void system_clock_init();
+
+
+// Helper functions
+uint_fast16_t convert_to_duty(const uint16_t pwm_period_us, const uint16_t ccr, const uint16_t pulsewidth);
+
+
+//  Interrupt Service Routines
+void ADC14_IRQHandler(void);
+void TA0_0_IRQHandler(void);
 
 
 //![Simple UART Config]
@@ -31,7 +48,7 @@ static const uint8_t PWM_PIN = GPIO_PIN5; // P2.5
  * at:
  *http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSP430BaudRateConverter/index.html
  */
-const eUSCI_UART_ConfigV1 uartConfig =
+static const eUSCI_UART_ConfigV1 uartConfig =
 {
         EUSCI_A_UART_CLOCKSOURCE_SMCLK,          // SMCLK Clock Source
         78,                                     // BRDIV = 78
@@ -46,16 +63,16 @@ const eUSCI_UART_ConfigV1 uartConfig =
 };
 
 
-
-
 /*
 The PWM timer that drives the BlueRobotics T200 is configured to 400Hz according 
 to maximum update rate given by the manufacturer's spec sheet. The T200 only accepts pulse width 
 periods between 1100-1900us. 
 */
 
-static const uint16_t pwm_period_400Hz_us = 2500; 
-static const uint16_t pwm_period_400Hz_CCR = 29999;
+static const uint_fast16_t pwm_period_400Hz_us = 2500; 
+static const uint_fast16_t pwm_period_400Hz_CCR = 29999;
+static const uint_fast16_t stop_signal_us = 1500;
+
 
 Timer_A_PWMConfig pwmConfig =
 {
@@ -64,7 +81,7 @@ Timer_A_PWMConfig pwmConfig =
         pwm_period_400Hz_CCR,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        18000
+        (stop_signal_us/pwm_period_400Hz_us)*pwm_period_400Hz_CCR                           // By default T200 should be off
         
 };
 
@@ -73,15 +90,14 @@ Timer_A_PWMConfig pwmConfig =
 // sin_table at time steps of 78.125uS. 
 // CCR0 = SMCLK frequency / target frequency -1
 // CCR0 = 12Mhz / 12.8kHz - 1 = 937
-
-static cosnt uint16_t updatePeriod = 937;  
+static const uint16_t updatePeriod = 937;  
 static const Timer_A_UpModeConfig updateTableConfig = 
 {
     TIMER_A_CLOCKSOURCE_SMCLK,
     TIMER_A_CLOCKSOURCE_DIVIDER_1,
     updatePeriod, 
-    TIMER_A_TAIE_INTERRUPT_ENABLE,
-    TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE
+    TIMER_A_TAIE_INTERRUPT_DISABLE,     // Don't enable this one before it raises interrupt after counter resets to 0
+    TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // Raise interrupt to happen when counter == CCR0  
     TIMER_A_DO_CLEAR
 };
 
@@ -93,9 +109,8 @@ static uint16_t rawCurrent;
 static volatile uint8_t data_is_ready; // Check if data from ADC has been received and is ready to send
 
 
-
 // Index to table, Note: can we make this not a global variable?
-int tbl_index = 0;
+static volatile uint8_t tbl_index = 0;
 
 
 #define TABLE_SIZE 128
@@ -121,18 +136,6 @@ uint16_t sin_table[TABLE_SIZE] = {
 
 
 
-// Periperhal Initialization Functions
-void initializePeripherals();
-void adc_init();
-void gpio_init();
-void timer_init();
-void uart_init();
-void system_clock_init();
-
-// ADC Interrupt Handler
-void ADC14_IRQHandler(void);
-
-
 int main(void)
 {
     // Stop watchdog timer
@@ -144,6 +147,8 @@ int main(void)
 
     // Enable interrupts after initializing
     Interrupt_enableInterrupt(INT_ADC14);
+    Interrupt_enableInterrupt(INT_TA0_0);
+
     //Interrupt_enableInterrupt(INT_EUSCIA0);
     Interrupt_enableMaster();
 
@@ -233,8 +238,8 @@ void gpio_init()
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
             RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
     
-    // Configure P2.4 to generate PWM to servo motor
-    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, SERVO_PIN,
+    // Configure P2.5 to generate PWM to T200 thruster
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, PWM_PIN,
                  GPIO_PRIMARY_MODULE_FUNCTION);
 }
 
@@ -243,7 +248,7 @@ void gpio_init()
 /// @brief Schedules Timer A to update current entry in the PWM table
 void timer_init() { 
 
-
+    Timer_A_generatePWM(TIMER_A1_BASE, &pwmConfig);
     // This starts the timer that will update the duty cycle 
     Timer_A_configureUpMode(TIMER_A0_BASE, &updateTableConfig);
     Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
@@ -292,18 +297,27 @@ void ADC14_IRQHandler(void)
 void TA0_0_IRQHandler(void)
 {
 
-
     // Clear the interrupt flag and reset timer count
     Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
-    // Write new duty cycle from lookup table
-    MAP_Timer_A_setCompareValue(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1,
-                                pwm_table[index]);
+    pwmConfig.dutyCycle = convert_to_duty(pwm_period_400Hz_us, pwm_period_400Hz_CCR, sin_table[tbl_index]);
 
-    Timer_A_generatePWM(TIMER_A1, pwmConfig)
-
+    Timer_A_setCompareValue(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1, pwmConfig.dutyCycle);
+    
     tbl_index++;
+
+    // Wrap around when end of table is reached.
     if (tbl_index >= TABLE_SIZE)
         tbl_index = 0;
 }
 
+
+/// @brief 
+/// Helper function that converts desired pulsewidth (in microseconds) to 
+/// duty cycle value as a percentage of Compare-Capture Register
+/// @param pwm_period_us 
+/// @param ccr 
+/// @param pulsewidth_us 
+uint_fast16_t convert_to_duty(const uint16_t pwm_period_us, const uint16_t ccr, const uint16_t pulsewidth_us) {
+    return (pulsewidth_us * ccr) / pwm_period_us;
+}
