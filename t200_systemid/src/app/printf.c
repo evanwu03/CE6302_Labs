@@ -8,6 +8,7 @@
  * See http://www.samlewis.me for an example implementation.
  */
 
+#include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include "stdarg.h"
 #include <stdint.h>
 
@@ -33,7 +34,7 @@ static const unsigned long dv[] = {
 void puts(uint32_t moduleInstance, char *s) {
 	char c;
 
-	while (c = *s++) {
+	while ((c = *s++)) {
 		sendByte(moduleInstance, c);
 	}
 }
