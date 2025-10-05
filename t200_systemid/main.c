@@ -33,7 +33,7 @@ void system_clock_init();
 
 
 // Helper functions
-uint_fast16_t convert_to_duty(const uint16_t pwm_period_us, const uint16_t ccr, const uint16_t pulsewidth);
+uint_fast16_t convert_to_duty(const uint_fast16_t pwm_period_us, const uint_fast16_t ccr, const uint_fast16_t pulsewidth);
 
 
 //  Interrupt Service Routines
@@ -318,6 +318,6 @@ void TA0_0_IRQHandler(void)
 /// @param pwm_period_us 
 /// @param ccr 
 /// @param pulsewidth_us 
-uint_fast16_t convert_to_duty(const uint16_t pwm_period_us, const uint16_t ccr, const uint16_t pulsewidth_us) {
+uint_fast16_t convert_to_duty(const uint_fast16_t pwm_period_us, const uint_fast16_t ccr, const uint_fast16_t pulsewidth_us) {
     return (pulsewidth_us * ccr) / pwm_period_us;
 }
