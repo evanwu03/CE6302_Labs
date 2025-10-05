@@ -13,7 +13,7 @@ periods between 1100-1900us.
 */
 
 
-extern volatile uint8_t tbl_index;
+extern volatile uint8_t tbl_index; // tbl_index 
 
 
 /* Function Prototypes*/

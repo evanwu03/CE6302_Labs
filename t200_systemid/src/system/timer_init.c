@@ -6,6 +6,7 @@
 
 
 
+// This is all current hardcoded to 400Hz. In future we want to be able to configure this externally
 static const uint_fast16_t pwm_period_400Hz_us = 2500; 
 static const uint_fast16_t pwm_period_400Hz_CCR = 29999;
 static const uint_fast16_t stop_signal_us = 1500;
