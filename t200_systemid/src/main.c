@@ -61,14 +61,14 @@ int main(void)
     while (1)
     {
 
-        
+        printf("PWM Duty Cycle: %u\n", pwmConfig.dutyCycle);
         if (data_is_ready)
         {
 
             data_is_ready = false; // reset flag
         }
         
-        PCM_gotoLPM0InterruptSafe(); // Go back to sleep
+        //PCM_gotoLPM0InterruptSafe(); // Go back to sleep
     }
 }
 

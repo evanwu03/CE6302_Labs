@@ -1,12 +1,17 @@
 
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include "../../include/system/adc_init.h"
+#include "../../include/system/gpio_init.h"
 
 
 void ADC14_IRQHandler(void)
 {
-    uint64_t status = ADC14_getEnabledInterruptStatus();
+    // Debug toggle 
+    //GPIO_setOutputHighOnPin(GPIO_PORT_P6, DEBUG_PIN);
 
+
+    uint64_t status = ADC14_getEnabledInterruptStatus();
+    
     // Clear the interrupt flag
     ADC14_clearInterruptFlag(status);
 
@@ -20,6 +25,9 @@ void ADC14_IRQHandler(void)
 
     // Set data_read flag, letting UART transfer initiate in main
     data_is_ready = true;
+
+    // Debug toggle
+    //GPIO_setOutputLowOnPin(GPIO_PORT_P6, DEBUG_PIN); 
 }
 
 
@@ -48,5 +56,6 @@ void adc_init() {
     // Sets source of the ADC trigger. In this code, Timer A CCR1 will be used
     // which is set to interrupt every 1ms (1khz) on timer's rising edge.
     ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE1, false); 
+
 }
 

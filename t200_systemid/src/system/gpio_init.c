@@ -4,17 +4,6 @@
 #include "../../include/system/gpio_init.h"
 
 
-// Hall Effect Sensor Sampling pin 
-static const uint8_t HALL_PIN = GPIO_PIN1; // P6.1 (ADC)
-
-
-// UART pin definition 
-static const uint8_t RX_PIN = GPIO_PIN2; //  P1.2 (RX)
-static const uint8_t TX_PIN = GPIO_PIN3; //  P1.3 (TX)
-
-
-// T200 ESC PWM Pin definition
-static const uint8_t PWM_PIN = GPIO_PIN5; // P2.5
 
 /// @brief Initializes all GPIO Pins used in application
 void gpio_init()
@@ -28,8 +17,14 @@ void gpio_init()
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
             RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
     
-    // Configure P2.5 to generate PWM to T200 thruster
+    // Configure P2.4 to generate PWM to T200 thruster
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, PWM_PIN,
                  GPIO_PRIMARY_MODULE_FUNCTION);
+    
+    // Debug  pin
+    GPIO_setAsOutputPin(GPIO_PORT_P6, DEBUG_PIN);
+
+    
+
 }
 

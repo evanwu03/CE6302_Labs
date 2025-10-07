@@ -14,7 +14,7 @@ periods between 1100-1900us.
 
 
 extern volatile uint8_t tbl_index; // tbl_index 
-
+extern Timer_A_PWMConfig pwmConfig;
 
 /* Function Prototypes*/
 

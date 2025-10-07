@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "driverlib.h": "c",
-        "msp432.h": "c"
+        "msp432.h": "c",
+        "uart_init.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
