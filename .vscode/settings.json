@@ -7,7 +7,8 @@
         "gpio_init.h": "c",
         "printf.h": "c",
         "stdarg.h": "c",
-        "timer_init.h": "c"
+        "timer_init.h": "c",
+        "msp432p401r.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

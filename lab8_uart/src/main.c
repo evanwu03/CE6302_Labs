@@ -1,0 +1,220 @@
+
+
+#include <stdint.h> 
+//#include <msp432.h>
+#include <msp432p401r.h>
+#include<stdbool.h>
+
+
+void sendString(char *str);
+void sendChar(char s);
+
+
+
+// Clock Frequency Defines
+#define ACLK_FREQ_HZ   (32768U) 
+#define SMCLK_FREQ_HZ  (1000000U)
+
+
+/* =========================================== */
+// UART_Config_t configuration parameter types 
+/* =========================================== */
+
+typedef enum { 
+    UART_PARITY_NONE = 0,
+    UART_PARITY_ODD = EUSCI_A_CTLW0_PEN,
+    UART_PARITY_EVEN = EUSCI_A_CTLW0_PAR | EUSCI_A_CTLW0_PEN
+} UART_Parity_t; 
+
+typedef enum { 
+    UART_LSB_FIRST = 0, 
+    UART_MSB_FIRST = EUSCI_A_CTLW0_MSB
+} UART_DataOrder_t;
+
+typedef enum{ 
+    UART_DATA_8BIT = 0,
+    UART_DATA_7BIT = EUSCI_A_CTLW0_SEVENBIT
+} UART_Character_Len_t;
+
+typedef enum { 
+    UART_MODE              = 0b00,
+    UART_IDLE_LINE_MULTI   = 0b01,
+    UART_ADDRESS_BIT_MULTI = 0b10,
+    UART_AUTO_BAUD_DETECT  = 0b11
+} UART_Mode_t; 
+
+
+typedef enum { 
+    UART_UCLK  = 0b00,
+    UART_ACLK  = 0b01,
+    UART_SMCLK = 0b10,
+} UART_Clock_Source_t;
+
+
+// UCAxMCTLW Register configs 
+
+typedef enum {
+    UART_OVERSAMPLING_OFF = 0,
+    UART_OVERSAMPLING_ON = EUSCI_A_MCTLW_OS16
+} UART_Oversampling_t;
+
+
+// End of UART parameter definitions
+
+
+
+/* =========================================== */
+// UART_Config_t Definition 
+/* =========================================== */
+typedef struct {
+    UART_Parity_t         parity;           // Parity Enable
+    UART_DataOrder_t      order;           // MSB mode select 
+    UART_Character_Len_t  data_length;      // Character length
+    UART_Mode_t           mode;             // eUSCI_A mode select 
+    UART_Clock_Source_t   clock_sel;        // eUSCI_A clock source select
+    uint32_t              baud_rate;        // Desired baud rate
+    UART_Oversampling_t   oversampling;     // Enables oversmapling mode;      UCAxMCTLW:  UCOS16 bit 
+    uint16_t              baud_prescaler;   // baud rate prescaler select;     UCAxBRW:    UCBRx field  
+    uint8_t               firstMod;         // first modualtion stage select;  UCAxMCTLW:  UCBRFx field
+    uint8_t               secondMod;         // second modulation stage select; UCAxMCTLW:  UCBRSx field
+                  
+} UART_config_t; 
+
+
+// End of UART_Config_t definition
+
+
+
+
+int main(void)
+{
+
+     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog timer
+
+    // Enable UART0 Pins
+    // P1.2->RX
+    // P1.3->TX
+    P1->SEL0 |= BIT2 | BIT3;
+    P1->SEL1 &= ~(BIT2 | BIT3);
+
+    // UART0 Configuration
+    // Enhanced Universal Serial Control Interface = EUSCI
+    EUSCI_A0->CTLW0 = EUSCI_A_CTLW0_SWRST;                               // Clear previous configuration of UART
+
+
+    
+// Add the configuration setup code here
+
+
+
+    // Enable UART2 Pins
+    // P3.2->RX
+    // P3.3->TX
+    P3->SEL0 |= BIT2 | BIT3;
+    P3->SEL1 &= ~(BIT2 | BIT3);
+
+    // UART2 Configuration
+    //EUSCI_A2->CTLW0 = EUSCI_A_CTLW0_SWRST;                 // Clear previous configuration of UART by setting reset
+
+    
+// Add the configuration setup code here and enable interrupt code
+
+    /*
+    // enable NVIC for UART0
+    NVIC->ISER[0] = 1 << (EUSCIA0_IRQn & 31);
+    // enable global interrupts
+    __enable_irq();
+
+    sendString("Enter r for red, g for green, b for blue!\r\n"); // send message
+
+
+    while (1)
+    {
+
+        // do nothing
+
+    }
+    */
+
+}
+
+
+/*
+void EUSCIA0_IRQHandler(void)
+{
+    if (EUSCI_A0->IFG & EUSCI_A_IFG_RXIFG) // receive interrupt
+    {
+        char c = EUSCI_A0->RXBUF; // store data into character buffer, and clear flag
+        sendChar(c);              // display character through the SERIAL port
+    }
+}
+
+void sendString(char *str)
+{
+    int i = 0;
+    while (str[i] != '\0')
+    {
+
+// Add the condition inside while loop
+
+        while ( ); // wait till TXBUF is empty (Check TXIFG flag)
+        EUSCI_A0->TXBUF = str[i]; // send character through buffer
+        i++;
+    }
+}
+
+void sendChar(char s)
+{
+
+// Add the condition inside while loop
+
+    while (); // wait till TXBUF is empty (Check TXIFG flag)
+    EUSCI_A2->TXBUF = s; // send character through buffer
+}
+*/
+
+
+/// @brief HAL function for configuring EUSCI_Ax module for UART mode
+/// @param uart THe UART module to be configured (A0, A1, or A2)
+/// @param config A structure of type uart_config_t containing configuration parameters
+void UART_initModule(EUSCI_A_Type* uart, const UART_config_t* config) { 
+
+    // Resets any previous UART configurations 
+    uart->CTLW0 = EUSCI_A_CTLW0_SWRST;
+
+
+    // Configure EUSCI_A_CTLW0
+
+
+     // Select UART clock 
+    uart->CTLW0 |= config->clock_sel; 
+
+    uart->CTLW0 |= ( config->parity      
+                   | config->order        
+                   |  config->data_length  
+                   |  config->mode); 
+
+
+    // Set the baud rate generator prescale value 
+    uart->BRW = config->baud_prescaler;
+
+    // Select first and second modulation stage values
+    uart->MCTLW = 0; 
+    uart->MCTLW |=   (config->firstMod << EUSCI_A_MCTLW_BRF_OFS) | (config->secondMod << EUSCI_A_MCTLW_BRS_OFS);
+
+    // Set oversampling mode if enabled 
+    if (config->oversampling) { 
+        uart->MCTLW |= config->oversampling;
+    }
+
+}
+
+/// @brief Enables the UART module by clearing the UCSWRST bit 
+/// @param uart // UART module 
+void UART_enableModule(EUSCI_A_Type* uart) { 
+
+    // Maybe check if UART is valid
+    uart->CTLW0 &= ~EUSCI_A_CTLW0_SWRST; 
+}
+
+
