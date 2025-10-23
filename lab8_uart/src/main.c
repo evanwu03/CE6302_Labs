@@ -37,17 +37,17 @@ typedef enum{
 } UART_Character_Len_t;
 
 typedef enum { 
-    UART_MODE              = 0b00,
-    UART_IDLE_LINE_MULTI   = 0b01,
-    UART_ADDRESS_BIT_MULTI = 0b10,
-    UART_AUTO_BAUD_DETECT  = 0b11
+    UART_MODE              = EUSCI_A_CTLW0_MODE_0 ,
+    UART_IDLE_LINE_MULTI   = EUSCI_A_CTLW0_MODE_1,
+    UART_ADDRESS_BIT_MULTI = EUSCI_A_CTLW0_MODE_2,
+    UART_AUTO_BAUD_DETECT  = EUSCI_A_CTLW0_MODE_3
 } UART_Mode_t; 
 
 
 typedef enum { 
-    UART_UCLK  = 0b00,
-    UART_ACLK  = 0b01,
-    UART_SMCLK = 0b10,
+    UART_UCLK  = EUSCI_A_CTLW0_SSEL__UCLK,
+    UART_ACLK  = EUSCI_A_CTLW0_SSEL__ACLK,
+    UART_SMCLK = EUSCI_A_CTLW0_SSEL__SMCLK,
 } UART_Clock_Source_t;
 
 
@@ -99,13 +99,15 @@ int main(void)
 
     // UART0 Configuration
     // Enhanced Universal Serial Control Interface = EUSCI
-    EUSCI_A0->CTLW0 = EUSCI_A_CTLW0_SWRST;                               // Clear previous configuration of UART
+    //EUSCI_A0->CTLW0 = EUSCI_A_CTLW0_SWRST;                               // Clear previous configuration of UART
 
 
     
 // Add the configuration setup code here
 
-
+    //Initialize UART0 
+    // Enable UART0 
+    
 
     // Enable UART2 Pins
     // P3.2->RX
@@ -117,7 +119,18 @@ int main(void)
     //EUSCI_A2->CTLW0 = EUSCI_A_CTLW0_SWRST;                 // Clear previous configuration of UART by setting reset
 
     
+
+
+
+
 // Add the configuration setup code here and enable interrupt code
+
+
+    // Initialize UART2
+    // Enable UART 2 
+
+
+
 
     /*
     // enable NVIC for UART0
@@ -139,7 +152,7 @@ int main(void)
 }
 
 
-/*
+
 void EUSCIA0_IRQHandler(void)
 {
     if (EUSCI_A0->IFG & EUSCI_A_IFG_RXIFG) // receive interrupt
@@ -149,6 +162,7 @@ void EUSCIA0_IRQHandler(void)
     }
 }
 
+
 void sendString(char *str)
 {
     int i = 0;
@@ -157,7 +171,7 @@ void sendString(char *str)
 
 // Add the condition inside while loop
 
-        while ( ); // wait till TXBUF is empty (Check TXIFG flag)
+        while (EUSIC_A_); // wait till TXBUF is empty (Check TXIFG flag)
         EUSCI_A0->TXBUF = str[i]; // send character through buffer
         i++;
     }
@@ -171,7 +185,7 @@ void sendChar(char s)
     while (); // wait till TXBUF is empty (Check TXIFG flag)
     EUSCI_A2->TXBUF = s; // send character through buffer
 }
-*/
+
 
 
 /// @brief HAL function for configuring EUSCI_Ax module for UART mode
@@ -181,9 +195,6 @@ void UART_initModule(EUSCI_A_Type* uart, const UART_config_t* config) {
 
     // Resets any previous UART configurations 
     uart->CTLW0 = EUSCI_A_CTLW0_SWRST;
-
-
-    // Configure EUSCI_A_CTLW0
 
 
      // Select UART clock 
@@ -212,9 +223,47 @@ void UART_initModule(EUSCI_A_Type* uart, const UART_config_t* config) {
 /// @brief Enables the UART module by clearing the UCSWRST bit 
 /// @param uart // UART module 
 void UART_enableModule(EUSCI_A_Type* uart) { 
-
     // Maybe check if UART is valid
     uart->CTLW0 &= ~EUSCI_A_CTLW0_SWRST; 
 }
 
 
+/// @brief Disables the UART module by setting the UCSWRST bit
+/// @param uart 
+void UART_disableModule(EUSCI_A_Type* uart) { 
+    uart->CTLW0 |= EUSCI_A_CTLW0_SWRST; 
+}
+
+
+/// @brief Enables interrupt for selected UART module
+/// @param uart 
+void UART_enableInterrupts(EUSCI_A_Type* uart, uint8_t mask) { 
+
+
+    uint8_t locMask; 
+
+    // Check for valid bits only
+    locMask = (mask
+            & (EUSCI_A_IE_RXIE | EUSCI_A_IE_TXIE
+                    | EUSCI_A_IE_STTIE
+                    | EUSCI_A_IE_TXCPTIE));
+
+
+    uart->IE |= locMask; 
+}
+
+
+/// @brief Disables interrupt for selected UART module
+/// @param uart 
+void UART_disableInterrupts(EUSCI_A_Type* uart, uint8_t mask) { 
+
+    uint8_t locMask; 
+
+    // Check for valid bits only
+    locMask = (mask
+            & (EUSCI_A_IE_RXIE | EUSCI_A_IE_TXIE
+                    | EUSCI_A_IE_STTIE
+                    | EUSCI_A_IE_TXCPTIE));
+
+    uart->IE &= ~locMask; 
+}
