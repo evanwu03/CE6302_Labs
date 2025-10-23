@@ -148,6 +148,8 @@ int main(void)
     // UART2 Configuration
     // EUSCI_A2->CTLW0 = EUSCI_A_CTLW0_SWRST;                 // Clear previous configuration of UART by setting reset
 
+
+    
     // Add the configuration setup code here and enable interrupt code
     UART_initModule(EUSCI_A2, &UART_A2_config); 
     UART_enableModule(EUSCI_A2); 
