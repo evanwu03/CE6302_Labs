@@ -3,7 +3,7 @@ SIMPLELINK_MSP432_SDK_INSTALL_DIR ?= $(abspath ../../../../../..)
 include $(SIMPLELINK_MSP432_SDK_INSTALL_DIR)/imports.mak
 
 
-NAME = uart
+NAME = uartrx
 TARGET = $(NAME).out
 
 BUILD_DIR   := build
@@ -90,6 +90,7 @@ $(BUILD_DIR)/gcc/%.o: ./%.c
 	@mkdir -p $(dir $@)
 	@echo "Building (GCC): $<\n"
 	$(CC) $(CFLAGS) -c $< -o $@
+
 
 
 # ------------------------------------------------------------------
