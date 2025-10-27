@@ -75,6 +75,14 @@ void SPI_sendByte(EUSCI_B_Type* spi, const uint8_t data) {
 } 
 
 
+/// @brief Receives a byte from master
+/// @param spi SPI module
+/// @return returns the byte transmitted
+uint8_t SPI_receiveByte(EUSCI_B_Type* spi) { 
+    while(!(spi->IFG & EUSCI_B_IFG_RXIFG));  // wait until data is received
+    return spi->RXBUF;
+}
+
 /// @brief Enables SPI interrrupts
 /// @param spi SPI module to enable interrupts on 
 /// @param mask bitmask for interrupt selection

@@ -4,8 +4,8 @@
         {
             "name": "Debug (OpenOCD)",
             "cwd": "${workspaceFolder}",
-            //"executable": "${workspaceFolder}/Lab9/spi_tx_lab9/gcc/build/spi.out",
-            "executable": "${workspaceFolder}/Lab8/lab8_uart_tx/gcc/build/uart.out",
+            "executable": "${workspaceFolder}/Lab9/spi_tx_lab9/gcc/build/spi.out",
+            //"executable": "${workspaceFolder}/Lab8/lab8_uart_tx/gcc/build/uart.out",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",

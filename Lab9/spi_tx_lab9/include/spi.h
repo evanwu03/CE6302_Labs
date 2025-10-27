@@ -68,6 +68,7 @@ void SPI_initModule(EUSCI_B_Type* spi, const SPI_Config_t* config);
 void SPI_enableModule(EUSCI_B_Type* spi); 
 void SPI_disableModule(EUSCI_B_Type* spi);
 void SPI_sendByte(EUSCI_B_Type* spi, const uint8_t data);
+uint8_t SPI_receiveByte(EUSCI_B_Type* spi);
 void SPI_enableInterrupts(EUSCI_B_Type* spi, const uint8_t mask);
 void SPI_disableInterrupts(EUSCI_B_Type* spi, const uint8_t mask);
 
