@@ -134,7 +134,6 @@ int main(void)
             transmit_is_ready = false;
         }        
         else if (led_is_on && (getCurrentTime() - prevTransmitTime >= DELAY_1000_MS)) {
-            //prevTransmitTime = getCurrentTime();
             // Toggle transmit LED off
             P1->OUT &= ~(BIT0);
             led_is_on = false; 
@@ -200,9 +199,6 @@ void sendChar(char s)
     // Add the condition inside while loop
     while (!(EUSCI_A0->IFG & EUSCI_A_IFG_TXIFG)); // wait till TXBUF is empty (Check TXIFG flag)
         EUSCI_A0->TXBUF = s; // send character through buffer
-
-    //while (!(EUSCI_A2->IFG & EUSCI_A_IFG_TXIFG)); // wait till TXBUF is empty (Check TXIFG flag)
-    //EUSCI_A2->TXBUF = s; // send character through buffer
 }
 
 
