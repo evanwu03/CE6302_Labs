@@ -148,7 +148,7 @@ int main(void)
 void PORT1_IRQHandler(void) {
     // Clear interrupt flag 
     if(P1->IFG & BIT4) { 
-        P1IFG &= ~BIT4;
+        P1->IFG  &= ~BIT4;
         transmit_is_ready = true; 
     }
 }
