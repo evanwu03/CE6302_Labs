@@ -94,7 +94,7 @@ int main(void)
 
     SPI_initModule(EUSCI_B0, &B0_SPI_config);  // Initialize SPI communication
     SPI_enableModule(EUSCI_B0);
-    EUSCI_B0->STATW |= EUSCI_B_STATW_LISTEN;   // Enable loopback mode
+    //EUSCI_B0->STATW |= EUSCI_B_STATW_LISTEN;   // DEnable loopback mode for debugging
 
 
     // Enable Timer A0
@@ -117,14 +117,14 @@ int main(void)
                 packetIndex = 0; 
 
 
-            /* SPI Loopback test */
-
+            
             // Send Packet
             SPI_sendByte(EUSCI_B0, packet[packetIndex]);
 
+            /* SPI Loopback test */ 
             // Receive Packet just sent
-            uint8_t byte = SPI_receiveByte(EUSCI_B0);
-            sendChar(byte); // Echo the packet to UART 
+            //uint8_t byte = SPI_receiveByte(EUSCI_B0);
+            //sendChar(byte); // Echo the packet to UART 
 
             // Turn transmit LED on 
             P1->OUT |= BIT0;
