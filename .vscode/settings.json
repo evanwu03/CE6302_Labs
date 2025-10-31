@@ -10,7 +10,8 @@
         "timer_init.h": "c",
         "msp432p401r.h": "c",
         "msp.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "uart.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": false

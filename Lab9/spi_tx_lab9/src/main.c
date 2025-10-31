@@ -116,8 +116,6 @@ int main(void)
             if(packetIndex >= PACKET_SIZE)  // Rollover to 0 if index exceeds size 
                 packetIndex = 0; 
 
-
-            
             // Send Packet
             SPI_sendByte(EUSCI_B0, packet[packetIndex]);
 

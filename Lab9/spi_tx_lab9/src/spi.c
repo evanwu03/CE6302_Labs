@@ -8,23 +8,23 @@
 void SPI_initModule(EUSCI_B_Type* spi, const SPI_Config_t* config) {
 
      // --- Configure the SPI pins based on module ---
-    if (spi == (EUSCI_B0 || EUSCI_B0_SPI)) {
+    if (spi == EUSCI_B0 || spi == EUSCI_B0_SPI) {
 
         // Set P1.5, P1.6, and P1.7 as SPI pins (CLK, MOSI, MISO)
         P1->SEL0 |= BIT5 | BIT6 | BIT7;   // CLK, MOSI, MISO
         P1->SEL1 &= ~(BIT5 | BIT6 | BIT7);
     } 
-    else if (spi == (EUSCI_B1 || EUSCI_B1_SPI)) {
+    else if (spi == EUSCI_B1 || spi == EUSCI_B1_SPI) {
 
         P6->SEL0 |= BIT2 | BIT3 | BIT4;   // CLK, MOSI, MISO
         P6->SEL1 &= ~(BIT2 | BIT3 | BIT4);
     } 
-    else if (spi == (EUSCI_B2 || EUSCI_B2_SPI)) {
+    else if (spi == EUSCI_B2 || spi ==EUSCI_B2_SPI) {
 
         P3->SEL0 |= BIT5 | BIT6 | BIT7;   // CLK, MOSI, MISO
         P3->SEL1 &= ~(BIT5 | BIT6 | BIT7);
     }
-    else if (spi == (EUSCI_B3 || EUSCI_B2_SPI)) {
+    else if (spi == EUSCI_B3 || spi == EUSCI_B3_SPI) {
         
         P9->SEL0 |= BIT1 | BIT2 | BIT3;   // CLK, MOSI, MISO
         P9->SEL1 &= ~(BIT1 | BIT2 | BIT3);
@@ -71,7 +71,7 @@ void SPI_sendByte(EUSCI_B_Type* spi, const uint8_t data) {
     while(!(spi->IFG & EUSCI_B_IFG_TXIFG)); // Use busy wait loop 
     spi->TXBUF = data; 
 
-    while(!(spi->IFG & EUSCI_B_IFG_RXIFG));  // wait until data is received
+    //while(!(spi->IFG & EUSCI_B_IFG_RXIFG));  // wait until data is received
 } 
 
 
