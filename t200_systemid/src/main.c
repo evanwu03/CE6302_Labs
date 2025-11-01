@@ -5,7 +5,7 @@ Purpose: Control a T200 thruster using a predefined square and sine wave of PWM 
 
 // TI DriverLib Library
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
-
+#include "msp432.h"
 
 // User-defined libraries
 #include "../include/app/printf.h"
@@ -27,6 +27,7 @@ volatile uint8_t data_is_ready; // Check if data from ADC has been received and 
 // Index to table, Note: can we make this not a global variable?
 volatile uint8_t tbl_index = 0;
 
+#define VCC (5U) // Voltage supply to ACS709 Hall effect sensor
 
 int main(void)
 {
@@ -56,20 +57,24 @@ int main(void)
     Interrupt_enableInterrupt(INT_TA0_0);
 
 
-    //Interrupt_enableInterrupt(INT_EUSCIA0);
     Interrupt_enableMaster();
 
     while (1)
     {
 
-        printf("PWM Duty Cycle: %u\n", pwmConfig.dutyCycle);
         if (data_is_ready)
         {
-            printf("ADC: %u", rawCurrent);
+            printf(EUSCI_A0, "ADC: %u", rawCurrent);
+
+            // Convert raw current to actual current in amps 
+            // VIOUT = (0.028 V/A * i + 2.5 V) * VCC / 5 V
+            float Iout = (0.028*rawCurrent + 2.5) * VCC / 5; 
+            printf(EUSCI_A0, "ADC: %.2f", Iout);
+
             data_is_ready = false; // reset flag
         }
         
-        //PCM_gotoLPM0InterruptSafe(); // Go back to sleep
+        PCM_gotoLPM0InterruptSafe(); // Go back to sleep
     }
 }
 
