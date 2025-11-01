@@ -11,8 +11,6 @@ void gpio_init()
     // Set GPIO pins as ADC input
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, HALL_PIN, GPIO_TERTIARY_MODULE_FUNCTION);
     
-    // Configure P3.2 (TX) and P3.3 (RX) as UART pins
-    //GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
     // Configure P1.2 (RX) and P1.3 (TX)
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
             RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
@@ -23,8 +21,6 @@ void gpio_init()
     
     // Debug  pin
     GPIO_setAsOutputPin(GPIO_PORT_P6, DEBUG_PIN);
-
-    
 
 }
 

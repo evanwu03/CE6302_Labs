@@ -55,6 +55,7 @@ int main(void)
     Interrupt_enableInterrupt(INT_ADC14);
     Interrupt_enableInterrupt(INT_TA0_0);
 
+
     //Interrupt_enableInterrupt(INT_EUSCIA0);
     Interrupt_enableMaster();
 
@@ -64,7 +65,7 @@ int main(void)
         printf("PWM Duty Cycle: %u\n", pwmConfig.dutyCycle);
         if (data_is_ready)
         {
-
+            printf("ADC: %u", rawCurrent);
             data_is_ready = false; // reset flag
         }
         

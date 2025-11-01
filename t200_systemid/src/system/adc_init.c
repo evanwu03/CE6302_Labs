@@ -53,9 +53,9 @@ void adc_init() {
     // must be called to begin sampling
     ADC14_enableConversion();
     
-    // Sets source of the ADC trigger. In this code, Timer A CCR1 will be used
+    // Sets source of the ADC trigger. In this code, Timer A1 CCR1 will be used
     // which is set to interrupt every 1ms (1khz) on timer's rising edge.
-    ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE1, false); 
+    ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE3, false); 
 
 }
 
