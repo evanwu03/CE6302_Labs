@@ -28,6 +28,7 @@ volatile uint8_t data_is_ready; // Check if data from ADC has been received and 
 volatile uint8_t tbl_index = 0;
 
 #define VCC (5U) // Voltage supply to ACS709 Hall effect sensor
+static const float ADC_REF= 2.5; 
 
 int main(void)
 {
@@ -68,7 +69,8 @@ int main(void)
 
             // Convert raw current to actual current in amps 
             // VIOUT = (0.028 V/A * i + 2.5 V) * VCC / 5 V
-            float Iout = (0.028*rawCurrent + 2.5) * VCC / 5; 
+            float VIout = (rawCurrent * ADC_REF) / 16384;
+            float Iout =  ((5*VIout/ VCC) - 2.5) / 0.028;   
             printf(EUSCI_A0, "ADC: %.2f", Iout);
 
             data_is_ready = false; // reset flag
