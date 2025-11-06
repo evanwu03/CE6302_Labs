@@ -15,12 +15,17 @@ void gpio_init()
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
             RX_PIN | TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
     
-    // Configure P2.4 to generate PWM to T200 thruster
-    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, PWM_PIN,
+    // Configure P5.6 to generate PWM to T200 thruster
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P5, PWM_PIN,
                  GPIO_PRIMARY_MODULE_FUNCTION);
     
     // Debug  pin
-    GPIO_setAsOutputPin(GPIO_PORT_P6, DEBUG_PIN);
+    GPIO_setAsOutputPin(GPIO_PORT_P4, DEBUG_PIN);
+
+
+    // To check TA1.1 Output
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P7, GPIO_PIN7,
+                                            GPIO_PRIMARY_MODULE_FUNCTION);
 
 }
 

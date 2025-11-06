@@ -14,6 +14,12 @@ periods between 1100-1900us.
 
 
 extern volatile uint8_t tbl_index; // tbl_index 
+#define RINGBUF_SIZE (2048U)
+extern volatile uint16_t ringbuf[]; 
+extern volatile uint16_t head; 
+extern volatile uint16_t tail;
+
+
 extern Timer_A_PWMConfig pwmConfig;
 
 /* Function Prototypes*/

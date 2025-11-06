@@ -7,7 +7,7 @@
 void ADC14_IRQHandler(void)
 {
     // Debug toggle 
-    //GPIO_setOutputHighOnPin(GPIO_PORT_P6, DEBUG_PIN);
+    //GPIO_setOutputHighOnPin(GPIO_PORT_P4, DEBUG_PIN);
 
 
     uint64_t status = ADC14_getEnabledInterruptStatus();
@@ -27,7 +27,7 @@ void ADC14_IRQHandler(void)
     data_is_ready = true;
 
     // Debug toggle
-    //GPIO_setOutputLowOnPin(GPIO_PORT_P6, DEBUG_PIN); 
+    //GPIO_setOutputLowOnPin(GPIO_PORT_P4, DEBUG_PIN); 
 }
 
 
@@ -39,23 +39,29 @@ void adc_init() {
     ADC14_initModule(ADC_CLOCKSOURCE_ADCOSC, ADC_PREDIVIDER_64, ADC_DIVIDER_8, ADC_NOROUTE);
 
     ADC14_configureSingleSampleMode(ADC_MEM0, ENABLE_ADC_REPEATMODE);
+
+    // Sets source of the ADC trigger. In this code, Timer A1 CCR1 will be used
+    // which is set to interrupt every 1ms (1khz) on timer's rising edge.
+    //ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE3, false); 
+    ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE3, false); 
+
+    // Configure Conversion memory
+    ADC14_configureConversionMemory(ADC_MEM0, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A14, false);
+    
     // Enable ADC module
     ADC14_enableModule();
 
-    // Enable interrupt on ADC channel 2 (end of sequence)
+    // Enable interrupt on ADC channel 0 (end of sequence)
     ADC14_enableInterrupt(ADC_INT0);
 
     // enables sample timer used to take samples
     ADC14_enableSampleTimer(ADC_AUTOMATIC_ITERATION);
 
-
     // Both ADC14_enableConversion and ADC14_toggleConversionTrigger
     // must be called to begin sampling
     ADC14_enableConversion();
+
     
-    // Sets source of the ADC trigger. In this code, Timer A1 CCR1 will be used
-    // which is set to interrupt every 1ms (1khz) on timer's rising edge.
-    ADC14_setSampleHoldTrigger(ADC_TRIGGER_SOURCE3, false); 
 
 }
 

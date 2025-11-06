@@ -4,7 +4,7 @@
 #include "../../include/system/timer_init.h"
 #include "../../include/app/tables.h"
 #include "../../include/system/gpio_init.h"
-
+#include <stdbool.h>
 
 
 
@@ -21,13 +21,13 @@ static const Timer_A_UpModeConfig updateTableConfig =
     updatePeriod, 
     TIMER_A_TAIE_INTERRUPT_DISABLE,     // Don't enable this one before it raises interrupt after counter resets to 0
     TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // Raise interrupt to happen when counter == CCR0  
-    TIMER_A_SKIP_CLEAR
+    TIMER_A_DO_CLEAR
 };
 
 
 // ADC trigger source configured to sample every 1kHz 
-// CCR0 = 12 MHz / 1kHZ = 1200
-static const uint16_t ADC_samplePeriod = 1199;
+// CCR0 = 12 MHz / 1kHZ = 12000
+static const uint16_t ADC_samplePeriod = 11999;
 
 static const Timer_A_UpModeConfig adcTimerConfig = 
 { 
@@ -39,6 +39,13 @@ static const Timer_A_UpModeConfig adcTimerConfig =
     TIMER_A_SKIP_CLEAR
 }; 
 
+    // CCR1 must have an OUTPUT MODE to generate the TA1.1 waveform:
+static const Timer_A_CompareModeConfig ta1_ccr1 = {
+    TIMER_A_CAPTURECOMPARE_REGISTER_1,
+    TIMER_A_CAPTURECOMPARE_INTERRUPT_DISABLE, // no ISR needed for trigger
+    TIMER_A_OUTPUTMODE_RESET_SET,             // <-- THIS makes the pulse
+    50                                       // small offset into the period
+};
 
 // This is all current hardcoded to 400Hz. In future we want to be able to configure this externally
 static const uint_fast16_t pwm_period_400Hz_us = 2500; 
@@ -51,7 +58,7 @@ Timer_A_PWMConfig pwmConfig =
         TIMER_A_CLOCKSOURCE_DIVIDER_1,
         pwm_period_400Hz_CCR,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
-        TIMER_A_OUTPUTMODE_RESET_SET,
+        TIMER_A_OUTPUTMODE_SET_RESET,
         (stop_signal_us*pwm_period_400Hz_CCR)/pwm_period_400Hz_us                           // By default T200 should be off
 
 };
@@ -68,10 +75,10 @@ void timer_init() {
     /* ADC timer interrupt source which samples at 1kHZ*/
     Timer_A_stopTimer(TIMER_A1_BASE);
     Timer_A_configureUpMode(TIMER_A1_BASE, &adcTimerConfig);
-    Timer_A_setCompareValue(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1, ADC_samplePeriod);
-    Timer_A_enableCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1); 
+    //Timer_A_setCompareValue(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1, 10);    
+    //Timer_A_enableCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1); 
+    Timer_A_initCompare(TIMER_A1_BASE, &ta1_ccr1);
 
-    
     /* Timer that produces PWM output to T200 thruster*/
     Timer_A_stopTimer(TIMER_A2_BASE);
     Timer_A_generatePWM(TIMER_A2_BASE, &pwmConfig);
@@ -96,12 +103,21 @@ void TA0_0_IRQHandler(void)
     pwmConfig.dutyCycle = convert_to_duty(pwm_period_400Hz_us, pwm_period_400Hz_CCR, sin_table[tbl_index]);
     Timer_A_setCompareValue(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1, pwmConfig.dutyCycle);
 
+    ringbuf[head] = sin_table[tbl_index];
+    head = (head + 1) % RINGBUF_SIZE;
+
+    if (head == tail) {                     // overflow handling
+        tail = (tail + 1) % RINGBUF_SIZE;       // drop oldest
+    }
+
     tbl_index++;
 
     // Wrap around when end of table is reached.
     if (tbl_index >= TABLE_SIZE)
         tbl_index = 0;
 
+
+    
     // Debug toggle
     //GPIO_setOutputLowOnPin(GPIO_PORT_P6, DEBUG_PIN);
 }

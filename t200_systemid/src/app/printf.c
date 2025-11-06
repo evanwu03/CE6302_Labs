@@ -11,6 +11,7 @@
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include "stdarg.h"
 #include <stdint.h>
+#include "../../include/system/gpio_init.h"
 
 
 void sendByte(uint32_t moduleInstance, char c)
@@ -68,6 +69,7 @@ static void puth(uint32_t moduleInstance, unsigned n) {
 
 void printf(uint32_t moduleInstance, char *format, ...)
 {
+	
 	char c;
 	int i;
 	long n;

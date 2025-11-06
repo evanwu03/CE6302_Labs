@@ -17,3 +17,10 @@ void uart_init()
     //UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT);
 
 }
+
+
+void EUSCIA0_IRQHandler(void) { 
+
+
+    
+}

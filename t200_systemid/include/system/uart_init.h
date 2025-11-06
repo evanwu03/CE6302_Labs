@@ -15,9 +15,9 @@ void uart_init();
 static const eUSCI_UART_ConfigV1 uartConfig =
 {
         EUSCI_A_UART_CLOCKSOURCE_SMCLK,          // SMCLK Clock Source
-        78,                                     // BRDIV = 78
-        2,                                       // UCxBRF = 2
-        0,                                       // UCxBRS = 0
+        6,                                     // BRDIV = 6
+        8,                                       // UCxBRF = 8
+        32,                                       // UCxBRS = 32
         EUSCI_A_UART_NO_PARITY,                  // No Parity
         EUSCI_A_UART_LSB_FIRST,                  // LSB First
         EUSCI_A_UART_ONE_STOP_BIT,               // One stop bit
