@@ -93,7 +93,7 @@ int main(void)
             if (head != tail) {
                 uint16_t dutycycle = ringbuf[tail];
                 tail = (tail + 1) % RINGBUF_SIZE;
-                printf(EUSCI_A0, "Current duty cycle: %u\n", dutycycle); 
+                printf(EUSCI_A0, "Current duty cycle: %u Table index %u \n", dutycycle, tbl_index); 
                 //printf(EUSCI_A0, "UUUUU");
             }
            
