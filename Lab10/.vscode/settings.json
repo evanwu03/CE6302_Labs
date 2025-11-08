@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "msp432.h": "c",
+        "driverlib.h": "c",
+        "stdint.h": "c",
+        "msp432p401r.h": "c",
+        "stdbool.h": "c"
+    }
+}
