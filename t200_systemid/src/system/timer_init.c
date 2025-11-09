@@ -93,7 +93,7 @@ void timer_init() {
 void TA0_0_IRQHandler(void)
 {
     // Debug toggle
-    // GPIO_setOutputHighOnPin(GPIO_PORT_P6, DEBUG_PIN);
+    //GPIO_setOutputHighOnPin(GPIO_PORT_P3, DEBUG_PIN);
 
     // Clear the interrupt flag and reset timer count
     Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
@@ -119,7 +119,7 @@ void TA0_0_IRQHandler(void)
 
     
     // Debug toggle
-    //GPIO_setOutputLowOnPin(GPIO_PORT_P6, DEBUG_PIN);
+    //GPIO_setOutputLowOnPin(GPIO_PORT_P3, DEBUG_PIN);
 }
 
 uint_fast16_t convert_to_duty(const uint_fast16_t pwm_period_us, const uint_fast16_t ccr, const uint_fast16_t pulsewidth_us) {
