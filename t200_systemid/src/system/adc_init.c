@@ -7,7 +7,7 @@
 void ADC14_IRQHandler(void)
 {
     // Debug toggle 
-    //GPIO_setOutputHighOnPin(GPIO_PORT_P4, DEBUG_PIN);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, DEBUG_PIN);
 
 
     uint64_t status = ADC14_getEnabledInterruptStatus();
@@ -27,7 +27,7 @@ void ADC14_IRQHandler(void)
     data_is_ready = true;
 
     // Debug toggle
-    //GPIO_setOutputLowOnPin(GPIO_PORT_P4, DEBUG_PIN); 
+    GPIO_setOutputLowOnPin(GPIO_PORT_P3, DEBUG_PIN); 
 }
 
 

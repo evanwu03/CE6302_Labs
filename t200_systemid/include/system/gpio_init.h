@@ -16,7 +16,7 @@
 #define PWM_PIN (GPIO_PIN6)
 
 // Debug Pin
-#define DEBUG_PIN (GPIO_PIN3)
+#define DEBUG_PIN (GPIO_PIN2)
 
 // GPIO initialization
 void gpio_init();

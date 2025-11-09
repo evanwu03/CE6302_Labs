@@ -41,9 +41,9 @@ void main(void) {
         int i=0;
         EUSCI_B0->CTLW0 |= EUSCI_B_CTLW0_TXSTT;     // 1. Generate START condition
         
-        /* for(i=0;i<100;i++){ // Delay
+        for(i=0;i<100;i++){ // Delay
 
-        } */
+        } 
     }
 }
 
@@ -113,13 +113,5 @@ void I2C_initModule() {
 
 
 void I2C_enableInterrupts(EUSCI_B_Type* i2c) {
-    
-    if (EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG0) { 
-        i2c->IE |= EUSCI_B_IE_TXIE0; // Enable TX interrupt
-    }
-    
-    /* if (EUSCI_B0->IFG & EUSCI_B_IFG_RXIFG0) { 
-
-    } */
-
+    i2c->IE |= EUSCI_B_IE_TXIE0; // Enable TX interrupt   
 }

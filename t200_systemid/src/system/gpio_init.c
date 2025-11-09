@@ -20,7 +20,7 @@ void gpio_init()
                  GPIO_PRIMARY_MODULE_FUNCTION);
     
     // Debug  pin
-    GPIO_setAsOutputPin(GPIO_PORT_P4, DEBUG_PIN);
+    GPIO_setAsOutputPin(GPIO_PORT_P3, DEBUG_PIN);
 
 
     // To check TA1.1 Output
