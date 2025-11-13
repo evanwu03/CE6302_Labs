@@ -50,8 +50,6 @@
 #include <msp432p401r.h>
 #include "../include/wdt.h"
 
-#define false 0
-#define true 1
 #define MAX_ERROR_COUNT 50
 
 void ConfigureGPIO(void);
@@ -83,7 +81,7 @@ static const struct wdt_config_t wdt_config_interval_timer_1s = {
 void main(void)
 {
     WDT_hold(&wdt_a);
-    //WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog
+    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog
 
     ConfigureGPIO();
     EnterActiveMode();
@@ -137,6 +135,7 @@ void WDT_A_IRQHandler(void) {
 
         // Add your lines of code here >>
        P1->OUT ^= BIT0; // Setup LED 1.0
+       P1->OUT ^= BIT5; // Toggle Debug LED
         // end here
 
     }
@@ -175,6 +174,10 @@ void ConfigureGPIO(void)
     P1->DIR |= BIT0; // Setup LED 1.0
     P1->OUT = 0;
     P1->REN &= ~BIT0;
+
+    P1->DIR |= BIT5;                 // Debug LED
+    P1->OUT  |= BIT5;                // Turn off Debug LED
+    P1->REN  &= ~BIT5;              // Disable pull resistor for Debug LED
 
     P1->DIR &= ~BIT4; // Input on P1.4
     P1->REN |= BIT4; // Enable pull up
