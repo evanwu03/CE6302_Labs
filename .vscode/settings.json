@@ -23,5 +23,5 @@
         "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
-    "cortex-debug.variableUseNaturalFormat": true
+    "cortex-debug.variableUseNaturalFormat": false
 }

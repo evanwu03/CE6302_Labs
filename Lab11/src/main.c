@@ -136,7 +136,7 @@ void WDT_A_IRQHandler(void) {
     if(!low_pwr_state){     // Blink LED in Active Mode
 
         // Add your lines of code here >>
-       
+       P1->OUT ^= BIT0; // Setup LED 1.0
         // end here
 
     }
