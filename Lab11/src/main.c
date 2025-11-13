@@ -180,7 +180,7 @@ void ConfigureGPIO(void)
 
 
     gpio_init_output(&led1, PORT1_BASE, BIT0);
-    gpio_init_output(&debug_led, PORT1_BASE, BIT5);
+    gpio_init_output(&debug_led, PORT1_BASE, BIT5); 
     
     P1->DIR &= ~BIT4; // Input on P1.4
     P1->REN |= BIT4; // Enable pull up
@@ -240,7 +240,8 @@ _Bool EnterLowPowerMode(void)
     PJ->SEL0 |= 0x03; // Set PJSEL for LFXT operation
     PJ->SEL1 &= ~0x03;
 
-    P1->OUT &= ~BIT0;
+    gpio_write(&led1, false); // Turn off LED1
+    gpio_write(&debug_led, false); // Turn off Debug LED
 
     // Turn off Supply Voltage Supervisor (SVSMH)
     PSS ->KEY = PSS_KEY_KEY_VAL; // access PSS
