@@ -177,7 +177,7 @@ void ConfigureGPIO(void)
 
     P1->DIR |= BIT5;                 // Debug LED
     P1->OUT  |= BIT5;                // Turn off Debug LED
-    P1->REN  &= ~BIT5;              // Disable pull resistor for Debug LED
+    P1->REN  &= ~BIT5;               // Disable pull up resistor for Debug LED
 
     P1->DIR &= ~BIT4; // Input on P1.4
     P1->REN |= BIT4; // Enable pull up
