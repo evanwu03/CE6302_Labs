@@ -12,7 +12,15 @@
         "msp.h": "c",
         "spi.h": "c",
         "uart.h": "c",
-        "adc_init.h": "c"
+        "adc_init.h": "c",
+        "bit": "cpp",
+        "memory": "cpp",
+        "optional": "cpp",
+        "type_traits": "cpp",
+        "cmath": "cpp",
+        "limits": "cpp",
+        "stdexcept": "cpp",
+        "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": true

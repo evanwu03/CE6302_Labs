@@ -48,7 +48,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <msp432p401r.h>
-
+#include "../include/wdt.h"
 
 #define false 0
 #define true 1
@@ -68,9 +68,22 @@ uint32_t counter = 0;
 
 
 
+// Watchdog Timer A instance and configuration
+struct wdt wdt_a;
+
+static const struct wdt_config_t wdt_config_interval_timer_1s = {
+    .mode_select = WDT_A_CTL_TMSEL, // Timer Interval Mode
+    .interval_select = WDT_A_CTL_IS_4,
+    .clock_source = WDT_A_CTL_SSEL_3,
+    .counter_clear = WDT_A_CTL_CNTCL
+};
+
+
+
 void main(void)
 {
-    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog
+    WDT_hold(&wdt_a);
+    //WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog
 
     ConfigureGPIO();
     EnterActiveMode();
@@ -109,7 +122,9 @@ void ConfigureWDT(void)
      */
 
     // Add your lines of code here >>
-   
+    WDT_init(&wdt_a, WDT_A_BASE, &wdt_config_interval_timer_1s);
+    NVIC_EnableIRQ(WDT_A_IRQn);
+
     // end here
 }
 
