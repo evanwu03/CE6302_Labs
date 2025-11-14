@@ -36,7 +36,10 @@
         "streambuf": "c",
         "tuple": "c",
         "typeinfo": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "wdt.h": "c",
+        "stdint.h": "c",
+        "msp432gpiodef.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": false

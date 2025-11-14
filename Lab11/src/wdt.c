@@ -5,7 +5,7 @@
 
 
 /// @brief Initializes the Watchdog Timer
-void WDT_init(struct wdt* wdt_instance, unsigned long base, struct wdt_config_t* config) { 
+void WDT_init(struct wdt* wdt_instance, unsigned long base, const struct wdt_config_t* config) { 
 
     wdt_instance->base = base;
 

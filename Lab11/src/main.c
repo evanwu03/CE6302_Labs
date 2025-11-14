@@ -49,6 +49,8 @@
 #include <stdbool.h>
 #include <msp432p401r.h>
 #include "../include/wdt.h"
+#include "../include/gpio.h"
+#include "../include/msp432gpiodef.h"
 
 #define MAX_ERROR_COUNT 50
 
@@ -64,8 +66,10 @@ _Bool valid_state_change_to_lpm = true;
 _Bool valid_state_change_to_am = true;
 uint32_t counter = 0;
 
-
-
+// GPIO instances for LEDs
+struct gpio led1;
+struct gpio debug_pin;
+ 
 // Watchdog Timer A instance and configuration
 struct wdt wdt_a;
 
@@ -78,7 +82,7 @@ static const struct wdt_config_t wdt_config_interval_timer_1s = {
 
 
 
-void main(void)
+int main(void)
 {
     WDT_hold(&wdt_a);
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD; // stop watchdog
@@ -134,8 +138,11 @@ void WDT_A_IRQHandler(void) {
     if(!low_pwr_state){     // Blink LED in Active Mode
 
         // Add your lines of code here >>
-       P1->OUT ^= BIT0; // Setup LED 1.0
-       P1->OUT ^= BIT5; // Toggle Debug LED
+       //P1->OUT ^= BIT0; // Setup LED 1.0
+       //P1->OUT ^= BIT5; // Toggle Debug LED
+
+       gpio_toggle(&led1);
+       gpio_toggle(&debug_pin);
         // end here
 
     }
@@ -171,14 +178,10 @@ void ConfigureGPIO(void)
     PD -> REN |= 0xFFFF; PD -> DIR |= 0xFFFF; PD -> OUT &= 0x0000;
     PE -> REN |= 0xFFFF; PE -> REN |= 0xFFFF;  PE -> OUT &= 0x0000;
 
-    P1->DIR |= BIT0; // Setup LED 1.0
-    P1->OUT = 0;
-    P1->REN &= ~BIT0;
 
-    P1->DIR |= BIT5;                 // Debug LED
-    P1->OUT  |= BIT5;                // Turn off Debug LED
-    P1->REN  &= ~BIT5;              // Disable pull resistor for Debug LED
-
+    gpio_init_output(&led1, PORT1_BASE, BIT0);
+    gpio_init_output(&debug_pin, PORT1_BASE, BIT5); 
+    
     P1->DIR &= ~BIT4; // Input on P1.4
     P1->REN |= BIT4; // Enable pull up
     P1->OUT |= BIT4;
@@ -232,12 +235,13 @@ _Bool EnterActiveMode(void)
 _Bool EnterLowPowerMode(void)
 {
     // Disable WDT
-    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
+    WDT_hold(&wdt_a);
 
     PJ->SEL0 |= 0x03; // Set PJSEL for LFXT operation
     PJ->SEL1 &= ~0x03;
 
-    P1->OUT &= ~BIT0;
+    gpio_write(&led1, false); // Turn off LED1
+    gpio_write(&debug_pin, false); // Turn off Debug LED
 
     // Turn off Supply Voltage Supervisor (SVSMH)
     PSS ->KEY = PSS_KEY_KEY_VAL; // access PSS
