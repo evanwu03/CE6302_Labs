@@ -5,6 +5,11 @@
 #include <msp432p401r.h>
 
 
+/// @brief  Check if the GPIO port is odd-numbered
+/// @param port_addr 
+/// @return true if odd-numbered port, false otherwise
+static _Bool gpio_port_is_odd(uintptr_t port_addr);
+
 
 void gpio_init_output(struct gpio* gpio_port, unsigned long base, size_t pinMask) { 
     gpio_port->base = base;
@@ -125,8 +130,7 @@ _Bool gpio_read(struct gpio* gpio_port) {
 }
 
 
-_Bool gpio_port_is_odd(uintptr_t port_addr)
-{
+static _Bool gpio_port_is_odd(uintptr_t port_addr) {
     uint32_t block = (port_addr >> 8) & 0xFF;
 
     /* I really have no clue why ports are like this*/

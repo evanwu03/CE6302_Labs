@@ -48,5 +48,5 @@ void gpio_toggle(struct gpio* gpio_port);
 _Bool gpio_read(struct gpio* gpio_port);  
 
 
-_Bool gpio_port_is_odd(uintptr_t port_addr);
+
 #endif

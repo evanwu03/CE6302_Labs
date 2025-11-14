@@ -68,7 +68,7 @@ uint32_t counter = 0;
 
 // GPIO instances for LEDs
 struct gpio led1;
-struct gpio debug_led;
+struct gpio debug_pin;
  
 // Watchdog Timer A instance and configuration
 struct wdt wdt_a;
@@ -142,7 +142,7 @@ void WDT_A_IRQHandler(void) {
        //P1->OUT ^= BIT5; // Toggle Debug LED
 
        gpio_toggle(&led1);
-       gpio_toggle(&debug_led);
+       gpio_toggle(&debug_pin);
         // end here
 
     }
@@ -180,7 +180,7 @@ void ConfigureGPIO(void)
 
 
     gpio_init_output(&led1, PORT1_BASE, BIT0);
-    gpio_init_output(&debug_led, PORT1_BASE, BIT5); 
+    gpio_init_output(&debug_pin, PORT1_BASE, BIT5); 
     
     P1->DIR &= ~BIT4; // Input on P1.4
     P1->REN |= BIT4; // Enable pull up
@@ -241,7 +241,7 @@ _Bool EnterLowPowerMode(void)
     PJ->SEL1 &= ~0x03;
 
     gpio_write(&led1, false); // Turn off LED1
-    gpio_write(&debug_led, false); // Turn off Debug LED
+    gpio_write(&debug_pin, false); // Turn off Debug LED
 
     // Turn off Supply Voltage Supervisor (SVSMH)
     PSS ->KEY = PSS_KEY_KEY_VAL; // access PSS
